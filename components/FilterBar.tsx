@@ -1,6 +1,6 @@
 import React from 'react';
 import { FilterState, MediaType, SortOption } from '../types';
-import { Search, ArrowUpDown, Sparkles, Upload } from 'lucide-react';
+import { Search, ArrowUpDown, Sparkles, Upload, Calendar, BarChart3 } from 'lucide-react';
 
 interface FilterBarProps {
   filters: FilterState;
@@ -8,14 +8,18 @@ interface FilterBarProps {
   onImportClick: () => void;
   onAiAnalyzeClick: () => void;
   isAnalyzing: boolean;
+  onAnalyticsClick: () => void;
+  activeView: 'feed' | 'analytics';
 }
 
-const FilterBar: React.FC<FilterBarProps> = ({ 
-  filters, 
-  setFilters, 
-  onImportClick, 
-  onAiAnalyzeClick, 
-  isAnalyzing 
+const FilterBar: React.FC<FilterBarProps> = ({
+  filters,
+  setFilters,
+  onImportClick,
+  onAiAnalyzeClick,
+  isAnalyzing,
+  onAnalyticsClick,
+  activeView
 }) => {
   
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -49,7 +53,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         {/* Center: Tabs */}
-        <div className="hidden md:flex items-center bg-gray-100/80 p-1 rounded-lg overflow-x-auto">
+        <div className={`${activeView === 'analytics' ? 'hidden' : 'hidden md:flex'} items-center bg-gray-100/80 p-1 rounded-lg overflow-x-auto`}>
           {(['ALL', ...Object.values(MediaType)] as const).map((type) => (
             <button
               key={type}
@@ -65,9 +69,29 @@ const FilterBar: React.FC<FilterBarProps> = ({
           ))}
         </div>
 
+        {/* Date Range Filter */}
+        <div className={`${activeView === 'analytics' ? 'hidden' : 'hidden lg:flex'} items-center gap-2 text-gray-500`}>
+          <Calendar size={14} className="text-gray-400 shrink-0" />
+          <input
+            type="date"
+            value={filters.dateFrom || ''}
+            onChange={(e) => setFilters(prev => ({ ...prev, dateFrom: e.target.value }))}
+            className="bg-gray-50 border border-transparent hover:bg-gray-100 focus:border-blue-100 focus:bg-white rounded-md text-xs px-2 py-1 outline-none transition-all"
+            title="From date"
+          />
+          <span className="text-xs text-gray-400">to</span>
+          <input
+            type="date"
+            value={filters.dateTo || ''}
+            onChange={(e) => setFilters(prev => ({ ...prev, dateTo: e.target.value }))}
+            className="bg-gray-50 border border-transparent hover:bg-gray-100 focus:border-blue-100 focus:bg-white rounded-md text-xs px-2 py-1 outline-none transition-all"
+            title="To date"
+          />
+        </div>
+
         {/* Right: Search, Sort, AI */}
         <div className="flex items-center gap-3 shrink-0">
-          <div className="relative hidden lg:block group">
+          <div className={`relative ${activeView === 'analytics' ? 'hidden' : 'hidden lg:block'} group`}>
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4 group-focus-within:text-blue-500 transition-colors" />
             <input 
               type="text" 
@@ -78,7 +102,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             />
           </div>
 
-          <div className="flex items-center gap-1 text-gray-500 text-sm font-medium pl-2 border-l border-gray-200">
+          <div className={`${activeView === 'analytics' ? 'hidden' : 'flex'} items-center gap-1 text-gray-500 text-sm font-medium pl-2 border-l border-gray-200`}>
             <ArrowUpDown size={14} />
             <select 
               value={filters.sortBy}
@@ -103,6 +127,18 @@ const FilterBar: React.FC<FilterBarProps> = ({
           >
             <Sparkles size={14} className={isAnalyzing ? "animate-spin" : ""} />
             <span className="hidden sm:inline">{isAnalyzing ? 'Thinking...' : 'AI Insights'}</span>
+          </button>
+
+          <button
+            onClick={onAnalyticsClick}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-all ${
+              activeView === 'analytics'
+                ? 'bg-gray-900 text-white shadow-lg shadow-gray-300'
+                : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-200 hover:from-emerald-600 hover:to-teal-700 hover:-translate-y-0.5'
+            }`}
+          >
+            <BarChart3 size={14} />
+            <span className="hidden sm:inline">{activeView === 'analytics' ? 'Feed' : 'Analytics'}</span>
           </button>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FacebookPost, MediaType } from '../types';
-import { Heart, MessageCircle, Share2, Eye, PlayCircle, ExternalLink, FileText } from 'lucide-react';
+import { Heart, MessageCircle, Share2, PlayCircle, ExternalLink, FileText } from 'lucide-react';
 
 interface PostCardProps {
   post: FacebookPost;
@@ -71,7 +71,10 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
   };
 
   return (
-    <div className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-200/50 hover:border-gray-300 transition-all duration-300 break-inside-avoid mb-4 cursor-pointer">
+    <div
+      className="group bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg hover:shadow-gray-200/50 hover:border-gray-300 transition-all duration-300 break-inside-avoid mb-4 cursor-pointer"
+      onClick={() => post.postUrl && window.open(post.postUrl, '_blank', 'noopener,noreferrer')}
+    >
       
       {/* Header */}
       <div className="p-4 flex items-center justify-between">
@@ -112,10 +115,6 @@ const PostCard: React.FC<PostCardProps> = ({ post }) => {
             <Share2 className="w-3.5 h-3.5" />
             <span className="font-medium">{formatNumber(stats.shares)}</span>
           </div>
-        </div>
-        <div className="flex items-center space-x-1 text-gray-400">
-          <Eye className="w-3 h-3" />
-          <span>{formatNumber(stats.views)}</span>
         </div>
       </div>
     </div>

@@ -4,22 +4,26 @@ import PostCard from './components/PostCard';
 import StatsOverview from './components/StatsOverview';
 import ImportModal from './components/ImportModal';
 import InsightModal from './components/InsightModal';
+import AnalyticsView from './components/AnalyticsView';
 import { FacebookPost, FilterState } from './types';
-import { MOCK_POSTS } from './constants';
+import { FACEBOOK_POSTS } from './constants';
 import { analyzePosts } from './services/geminiService';
 
 const App: React.FC = () => {
-  const [posts, setPosts] = useState<FacebookPost[]>(MOCK_POSTS);
+  const [posts, setPosts] = useState<FacebookPost[]>(FACEBOOK_POSTS);
   const [filters, setFilters] = useState<FilterState>({
     search: '',
     mediaType: 'ALL',
-    sortBy: 'recent'
+    sortBy: 'recent',
+    dateFrom: '',
+    dateTo: ''
   });
   
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isInsightModalOpen, setIsInsightModalOpen] = useState(false);
   const [aiInsight, setAiInsight] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [activeView, setActiveView] = useState<'feed' | 'analytics'>('feed');
 
   // Filter and Sort Logic
   const filteredAndSortedPosts = useMemo(() => {
@@ -31,6 +35,15 @@ const App: React.FC = () => {
         (p.content && p.content.toLowerCase().includes(q)) || 
         (p.author && p.author.name && p.author.name.toLowerCase().includes(q))
       );
+    }
+
+    if (filters.dateFrom) {
+      result = result.filter(p => new Date(p.postedAt) >= new Date(filters.dateFrom!));
+    }
+    if (filters.dateTo) {
+      const endDate = new Date(filters.dateTo!);
+      endDate.setHours(23, 59, 59, 999);
+      result = result.filter(p => new Date(p.postedAt) <= endDate);
     }
 
     if (filters.mediaType !== 'ALL') {
@@ -84,33 +97,39 @@ const App: React.FC = () => {
         onImportClick={() => setIsImportModalOpen(true)}
         onAiAnalyzeClick={handleAiAnalyze}
         isAnalyzing={isAnalyzing}
+        activeView={activeView}
+        onAnalyticsClick={() => setActiveView(activeView === 'feed' ? 'analytics' : 'feed')}
       />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <StatsOverview posts={filteredAndSortedPosts} />
+      {activeView === 'feed' ? (
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <StatsOverview posts={filteredAndSortedPosts} />
 
-        {filteredAndSortedPosts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center">
-            <div className="bg-gray-100 rounded-full p-6 mb-4">
-              <span className="text-4xl">🔍</span>
+          {filteredAndSortedPosts.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-32 text-center">
+              <div className="bg-gray-100 rounded-full p-6 mb-4">
+                <span className="text-4xl">🔍</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900">No posts found</h3>
+              <p className="text-gray-500 mt-2 max-w-sm">Try adjusting your filters or search terms to find what you're looking for.</p>
+              <button
+                onClick={() => setFilters({search: '', mediaType: 'ALL', sortBy: 'recent', dateFrom: '', dateTo: ''})}
+                className="mt-6 px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                Clear all filters
+              </button>
             </div>
-            <h3 className="text-xl font-semibold text-gray-900">No posts found</h3>
-            <p className="text-gray-500 mt-2 max-w-sm">Try adjusting your filters or search terms to find what you're looking for.</p>
-            <button 
-              onClick={() => setFilters({search: '', mediaType: 'ALL', sortBy: 'recent'})}
-              className="mt-6 px-6 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
-            >
-              Clear all filters
-            </button>
-          </div>
-        ) : (
-          <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
-            {filteredAndSortedPosts.map((post) => (
-              <PostCard key={post.id} post={post} />
-            ))}
-          </div>
-        )}
-      </main>
+          ) : (
+            <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-6 space-y-6">
+              {filteredAndSortedPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          )}
+        </main>
+      ) : (
+        <AnalyticsView posts={filteredAndSortedPosts} />
+      )}
 
       <ImportModal 
         isOpen={isImportModalOpen} 
@@ -123,6 +142,7 @@ const App: React.FC = () => {
         onClose={() => setIsInsightModalOpen(false)}
         insight={aiInsight}
       />
+
     </div>
   );
 };

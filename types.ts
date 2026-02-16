@@ -27,6 +27,7 @@ export interface FacebookPost {
   linkUrl?: string; // For external links
   postedAt: string; // ISO Date string
   postUrl: string; // Link to the actual FB post
+  usesImageExploit: boolean; // True if post uses 1px dummy image for reach
   stats: PostStats;
 }
 
@@ -36,4 +37,6 @@ export interface FilterState {
   search: string;
   mediaType: MediaType | 'ALL';
   sortBy: SortOption;
+  dateFrom?: string;
+  dateTo?: string;
 }
